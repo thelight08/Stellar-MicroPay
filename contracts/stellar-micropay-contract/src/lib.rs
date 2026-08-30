@@ -172,12 +172,7 @@ pub struct Stream {
 
 /// Index of `recipients[i].recipient == addr`, if `addr` is on the stream.
 fn find_recipient(recipients: &soroban_sdk::Vec<StreamRecipient>, addr: &Address) -> Option<u32> {
-    for i in 0..recipients.len() {
-        if &recipients.get(i).unwrap().recipient == addr {
-            return Some(i);
-        }
-    }
-    None
+    (0..recipients.len()).find(|&i| &recipients.get(i).unwrap().recipient == addr)
 }
 
 fn total_weight(recipients: &soroban_sdk::Vec<StreamRecipient>) -> u32 {
@@ -349,6 +344,10 @@ fn save_stream(env: &Env, stream_id: u32, stream: &Stream) {
 pub struct MicroPayContract;
 
 #[contractimpl]
+#[allow(deprecated, clippy::needless_borrows_for_generic_args)]
+// events().publish is deprecated in favor of #[contractevent]; raw topics are
+// kept for indexer compatibility. The client's transfer args are generic, so
+// the explicit borrows are intentional for clarity.
 impl MicroPayContract {
     pub fn initialize(env: Env, admin: Address) -> Result<(), ContractError> {
         if env.storage().persistent().has(&DataKey::Admin) {
